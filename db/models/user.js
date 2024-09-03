@@ -8,35 +8,43 @@ module.exports = sequelize.define('user', {
     allowNull: false,
     autoIncrement: true,
     primaryKey: true,
-    type: Sequelize.INTEGER
+    type: DataTypes.INTEGER,
   },
   userType: {
-    type: Sequelize.ENUM('0', '1', '2')
+    type: DataTypes.ENUM('0', '1', '2'),
+    allowNull: false
   },
   firstName: {
-    type: Sequelize.STRING
+    type: DataTypes.STRING,
+    allowNull: false
   },
   lastName: {
-    type: Sequelize.STRING
+    type: DataTypes.STRING,
+    allowNull: false
   },
   email: {
-    type: Sequelize.STRING
+    type: DataTypes.STRING
   },
   password: {
-    type: Sequelize.STRING
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  confirmPassword: {
+    type: DataTypes.VIRTUAL,
   },
   createdAt: {
     allowNull: false,
-    type: Sequelize.DATE
+    type: DataTypes.DATE
   },
   updatedAt: {
     allowNull: false,
-    type: Sequelize.DATE
+    type: DataTypes.DATE
   },
   deletedAt: {
-    type: Sequelize.DATE
+    type: DataTypes.DATE
   }
 }, {
+  timestamps: true,
   paranoid: true,
   freezeTableName: true,
   modelName: 'user',
