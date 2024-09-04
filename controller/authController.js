@@ -1,5 +1,6 @@
 const user = require('../db/models/user');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 const generateToken = (payload) => {
     return jwt.sign(payload, process.env.JWT_SECRET_KEY, {
@@ -54,7 +55,54 @@ const signup = async (req, res, next) => {
             error: err.message
         });
     }
+};
+
+const login = async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                status: 'failure',
+                message: 'Please provide email and password'
+            });
+        }
+
+        const result = await user.findOne({ where: { email } });
+
+        if (!result) {
+            return res.status(401).json({
+                status: 'failure',
+                message: 'Incorrect email or password'
+            });
+        }
+
+        const isPasswordMached = await bcrypt.compare(password, result.password);
+
+        if (!isPasswordMached) {
+            return res.status(401).json({
+                status: 'failure',
+                message: 'Incorrect email or password'
+            });
+        }
+
+        const token = generateToken({
+            id: result.id,
+        });
+
+        return res.json({
+            status: 'success',
+            token
+        });
+    } catch (err) {
+        return res.status(500).json({
+            status: 'failure',
+            message: 'Server error',
+            error: err.message
+        });
+    }
+
 
 }
 
-module.exports = { signup };
+module.exports = { signup, login };
