@@ -1,6 +1,8 @@
 const user = require('../db/models/user');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const catchAsync = require('../utils/catchAsync');
+const AppError = require('../utils/appError');
 
 const generateToken = (payload) => {
     return jwt.sign(payload, process.env.JWT_SECRET_KEY, {
@@ -8,15 +10,12 @@ const generateToken = (payload) => {
     });
 }
 
-const signup = async (req, res, next) => {
+const signup = catchAsync(async (req, res, next) => {
     try {
         const body = req.body;
 
         if (!['1', '2'].includes(body.userType)) {
-            return res.status(400).json({
-                status: 'failure',
-                message: 'Invalid user Type',
-            });
+            throw new AppError('Invalid user Type', 400);
         }
 
         const newUser = await user.create({
@@ -28,6 +27,10 @@ const signup = async (req, res, next) => {
             confirmPassword: body.confirmPassword,
         });
 
+        if (!newUser) {
+            return next(new AppError('Failed to create the user', 400))
+        }
+
         const result = newUser.toJSON()
 
         delete result.password;
@@ -36,13 +39,6 @@ const signup = async (req, res, next) => {
         result.token = generateToken({
             id: result.id,
         });
-
-        if (!result) {
-            return res.status(400).json({
-                status: 'failure',
-                message: 'Failed to create the user'
-            });
-        }
 
         return res.status(201).json({
             status: 'success',
@@ -55,26 +51,24 @@ const signup = async (req, res, next) => {
             error: err.message
         });
     }
-};
+});
 
-const login = async (req, res, next) => {
+const login = catchAsync(async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({
-                status: 'failure',
-                message: 'Please provide email and password'
-            });
+            return next(new AppError('Please provide email and password', 400));
+            // return res.status(400).json({
+            //     status: 'failure',
+            //     message: 'Please provide email and password'
+            // });
         }
 
         const result = await user.findOne({ where: { email } });
 
         if (!result) {
-            return res.status(401).json({
-                status: 'failure',
-                message: 'Incorrect email or password'
-            });
+            return next(new AppError('Incorrect email or password', 401));
         }
 
         const isPasswordMached = await bcrypt.compare(password, result.password);
@@ -101,8 +95,7 @@ const login = async (req, res, next) => {
             error: err.message
         });
     }
-
-
-}
+    _
+});
 
 module.exports = { signup, login };
