@@ -86,4 +86,28 @@ const login = catchAsync(async (req, res, next) => {
     _
 });
 
-module.exports = { signup, login };
+const authentication = catchAsync(async (req, res, next) => {
+
+    // get token from headers
+    let idToken = '';
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        idToken = req.headers.authorization.split(' ')[1];
+    }
+    if (!idToken) {
+        return next(new AppError('Please login to get access', 401));
+    }
+
+    // token verification
+    const tokenDetail = jwt.verify(idToken, process.env.JWT_SECRET_KEY);
+
+    // get the user detail from db add to req object
+    const freshUser = await user.findByPk(tokenDetail.id);
+
+    if (!freshUser) {
+        return next(new AppError('User no longer exists', 400));
+    }
+    req.user = freshUser;
+    return next();
+})
+
+module.exports = { signup, login, authentication };
