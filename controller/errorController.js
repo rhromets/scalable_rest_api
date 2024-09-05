@@ -25,7 +25,7 @@ const sendErrorProd = (error, res) => {
         });
     }
 
-    console.log(error.name, error.message, stack);
+    console.log(error.name, error.message, error.stack);
     return res.status(500).json({
         status: 'error',
         message: 'Something went wrong'
@@ -33,10 +33,11 @@ const sendErrorProd = (error, res) => {
 };
 
 const globalErrorHandler = (err, req, res, next) => {
-
-    let error = '';
-    if (err.statusCode === 5001) {
-        error = new AppError();
+    if (err.name === 'SequelizeValidationError') {
+        err = new AppError(err.errors[0].message, 400);
+    }
+    if (err.name === 'SequelizeUniqueConstraintError') {
+        err = new AppError(err.errors[0].message, 400);
     }
     if (process.env.NODE_ENV === 'development') {
         return sendErrorDev(err, res);
