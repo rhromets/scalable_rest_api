@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../../config/database');
 
 
-module.exports = sequelize.define('project', {
+const project = sequelize.define('project', {
   id: {
     allowNull: false,
     autoIncrement: true,
@@ -130,3 +130,6 @@ module.exports = sequelize.define('project', {
   freezeTableName: true,
   modelName: 'project'
 });
+
+
+module.exports = project;
